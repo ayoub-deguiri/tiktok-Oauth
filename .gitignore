@@ -1,8 +1,7 @@
 # Ignore Composer dependencies
 /vendor/
 
-# Ignore environment files
-.env
+
 
 # Ignore system files
 .DS_Store

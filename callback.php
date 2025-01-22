@@ -1,35 +1,99 @@
 <?php
 require 'vendor/autoload.php';
 
-use League\OAuth2\Client\Provider\GenericProvider;
+use League\OAuth2\Client\Provider\AbstractProvider;
+use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
+use League\OAuth2\Client\Token\AccessToken;
+use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
+use Psr\Http\Message\ResponseInterface;
 
-$provider = new GenericProvider([
-    'clientId'                => 'sbaww4cmy7s57rnq3j', // Replace with your TikTok Client Key
-    'clientSecret'            => 'W0ag11JJVIEglBoMKgplUyApTt7J1wHH', // Replace with your TikTok Client Secret
-    'redirectUri'             => 'https://encouraging-crissie-dakiri-28cc87b6.koyeb.app/callback.php', // Replace with your Koyeb app URL
-    'urlAuthorize'            => 'https://www.tiktok.com/v2/auth/authorize/',
-    'urlAccessToken'          => 'https://www.tiktok.com/v2/auth/token/',
-]);
+session_start();
 
-if (!isset($_GET['code'])) {
-    die('Authorization code not found.');
+// TikTok OAuth Credentials (Replace with your own)
+$clientKey = 'sbaww4cmy7s57rnq3j'; // Replace with your TikTok Client Key
+$clientSecret = 'W0ag11JJVIEglBoMKgplUyApTt7J1wHH'; // Replace with your TikTok Client Secret
+$redirectUri = 'https://encouraging-crissie-dakiri-28cc87b6.koyeb.app/callback.php'; // Replace with your callback URL
+
+// Custom TikTok Provider Class
+class TikTokProvider extends AbstractProvider
+{
+    use BearerAuthorizationTrait;
+
+    protected $clientKey;
+    protected $clientSecret;
+    protected $redirectUri;
+
+    public function __construct(array $options = [], array $collaborators = [])
+    {
+        parent::__construct($options, $collaborators);
+        $this->clientKey = $options['clientKey'];
+        $this->clientSecret = $options['clientSecret'];
+        $this->redirectUri = $options['redirectUri'];
+    }
+
+    public function getBaseAuthorizationUrl()
+    {
+        return 'https://www.tiktok.com/auth/authorize/';
+    }
+
+    public function getBaseAccessTokenUrl(array $params)
+    {
+        return 'https://open.tiktokapis.com/v2/oauth/token/';
+    }
+
+    public function getResourceOwnerDetailsUrl(AccessToken $token)
+    {
+        return 'https://open.tiktokapis.com/v2/user/info/';
+    }
+
+    protected function getDefaultScopes()
+    {
+        return ['user.info.basic']; // Default scope
+    }
+
+    protected function checkResponse(ResponseInterface $response, $data)
+    {
+        if (!empty($data['error'])) {
+            throw new IdentityProviderException($data['error'], $response->getStatusCode(), $response);
+        }
+    }
+
+    protected function createResourceOwner(array $response, AccessToken $token)
+    {
+        return $response; // Return raw response for simplicity
+    }
 }
 
+// Initialize TikTok Provider
+$provider = new TikTokProvider([
+    'clientKey' => $clientKey,
+    'clientSecret' => $clientSecret,
+    'redirectUri' => $redirectUri,
+]);
+
+// Verify the state parameter
+if (empty($_GET['state']) || ($_GET['state'] !== $_SESSION['oauth2state'])) {
+    unset($_SESSION['oauth2state']);
+    exit('Invalid state');
+}
+
+// Get the authorization code
+$code = $_GET['code'];
+
 try {
-    // Get the access token
+    // Exchange the code for an access token
     $accessToken = $provider->getAccessToken('authorization_code', [
-        'code' => $_GET['code'],
+        'code' => $code,
     ]);
 
-    // Get the user's details
+    // Use the access token to fetch user info
     $resourceOwner = $provider->getResourceOwner($accessToken);
-    $userDetails = $resourceOwner->toArray();
+    $userInfo = $resourceOwner->toArray();
 
-    // Display user details
-    echo "<h1>Welcome, " . $userDetails['display_name'] . "!</h1>";
-    echo "<pre>";
-    print_r($userDetails);
-    echo "</pre>";
+    // Output user info
+    echo '<pre>';
+    print_r($userInfo);
+    echo '</pre>';
 } catch (\Exception $e) {
-    echo "Error: " . $e->getMessage();
+    exit('Error: ' . $e->getMessage());
 }
