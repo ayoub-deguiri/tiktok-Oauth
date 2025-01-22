@@ -21,9 +21,7 @@ tmp/
 # Ignore uploaded files
 /uploads/
 
-# Ignore Composer files (if not needed)
-composer.lock
-composer.phar
+
 
 # Ignore local development files
 docker-compose.yml
