@@ -10,8 +10,8 @@ use Psr\Http\Message\ResponseInterface;
 session_start();
 
 // TikTok OAuth Credentials (Replace with your own)
-$clientKey = 'sbawfkhufpqjwwl44p'; // Replace with your TikTok Client Key
-$clientSecret = 'tfg9nooMwjOW2wBAi1kkXU3L3Of4jdGS'; // Replace with your TikTok Client Secret
+$clientKey = 'awzlfpubek5d1fdy'; // Replace with your TikTok Client Key
+$clientSecret = 'O1rPtgImPn2eFATlqdj2IjKCw9wZZTag'; // Replace with your TikTok Client Secret
 $redirectUri = 'https://encouraging-crissie-dakiri-28cc87b6.koyeb.app/callback.php'; // Replace with your callback URL
 
 // Custom TikTok Provider Class
