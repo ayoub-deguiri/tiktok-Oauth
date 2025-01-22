@@ -1,105 +1,51 @@
 <?php
 require 'vendor/autoload.php';
 
-use League\OAuth2\Client\Provider\AbstractProvider;
-use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
-use League\OAuth2\Client\Token\AccessToken;
-use League\OAuth2\Client\Tool\BearerAuthorizationTrait;
-use Psr\Http\Message\ResponseInterface;
+// Load environment variables
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv->load();
 
-session_start();
+// TikTok App credentials
+$clientKey = $_ENV['CLIENT_KEY'];
+$clientSecret = $_ENV['CLIENT_SECRET'];
+$redirectUri = $_ENV['REDIRECT_URI'];
 
-// TikTok OAuth Credentials (Replace with your own)
-$clientKey = 'awzlfpubek5d1fdy'; // Replace with your TikTok Client Key
-$clientSecret = 'O1rPtgImPn2eFATlqdj2IjKCw9wZZTag'; // Replace with your TikTok Client Secret
-$redirectUri = 'https://encouraging-crissie-dakiri-28cc87b6.koyeb.app/callback.php'; // Replace with your callback URL
+// Check if TikTok returned an authorization code
+if (isset($_GET['code'])) {
+    $authCode = $_GET['code'];
 
-// Custom TikTok Provider Class
-class TikTokProvider extends AbstractProvider
-{
-    use BearerAuthorizationTrait;
+    // Exchange authorization code for access token
+    $url = 'https://open.tiktokapis.com/v2/oauth/token/';
+    $postData = [
+        'client_key' => $clientKey,
+        'client_secret' => $clientSecret,
+        'code' => $authCode,
+        'grant_type' => 'authorization_code',
+        'redirect_uri' => $redirectUri
+    ];
 
-    protected $clientKey;
-    protected $clientSecret;
-    protected $redirectUri;
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-    public function __construct(array $options = [], array $collaborators = [])
-    {
-        parent::__construct($options, $collaborators);
-        $this->clientKey = $options['clientKey'];
-        $this->clientSecret = $options['clientSecret'];
-        $this->redirectUri = $options['redirectUri'];
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $data = json_decode($response, true);
+
+    if (isset($data['access_token'])) {
+        $accessToken = $data['access_token'];
+        $userInfo = $data['data']; // Contains user information (if scope allows)
+
+        echo "<h1>Login Successful!</h1>";
+        echo "<p>Access Token: $accessToken</p>";
+        echo "<pre>" . print_r($userInfo, true) . "</pre>";
+    } else {
+        echo "<h1>Error</h1>";
+        echo "<p>" . $data['message'] . "</p>";
     }
-
-    public function getBaseAuthorizationUrl()
-    {
-        return 'https://www.tiktok.com/auth/authorize/';
-    }
-
-    public function getBaseAccessTokenUrl(array $params)
-    {
-        return 'https://open.tiktokapis.com/v2/oauth/token/';
-    }
-
-    public function getResourceOwnerDetailsUrl(AccessToken $token)
-    {
-        return 'https://open.tiktokapis.com/v2/user/info/';
-    }
-
-    protected function getDefaultScopes()
-    {
-        return ['user.info.basic']; // Default scope
-    }
-
-    protected function checkResponse(ResponseInterface $response, $data)
-    {
-        if (!empty($data['error'])) {
-            throw new IdentityProviderException($data['error'], $response->getStatusCode(), $response);
-        }
-    }
-
-    protected function createResourceOwner(array $response, AccessToken $token)
-    {
-        return $response; // Return raw response for simplicity
-    }
-}
-
-// Initialize TikTok Provider
-$provider = new TikTokProvider([
-    'clientKey' => $clientKey,
-    'clientSecret' => $clientSecret,
-    'redirectUri' => $redirectUri,
-]);
-
-// Verify the state parameter
-if (empty($_GET['state']) || ($_GET['state'] !== $_SESSION['oauth2state'])) {
-    unset($_SESSION['oauth2state']);
-    exit('Invalid state');
-}
-
-// Get the authorization code
-$code = $_GET['code'];
-
-try {
-    // Exchange the code for an access token
-    $accessToken = $provider->getAccessToken('authorization_code', [
-        'code' => $code,
-    ]);
-
-    // Debug: Print access token
-    echo '<pre>';
-    print_r($accessToken);
-    echo '</pre>';
-
-    // Use the access token to fetch user info
-    $resourceOwner = $provider->getResourceOwner($accessToken);
-    $userInfo = $resourceOwner->toArray();
-
-    // Debug: Print user info
-    echo '<pre>';
-    print_r($userInfo);
-    echo '</pre>';
-} catch (\Exception $e) {
-    // Debug: Print error message
-    echo 'Error: ' . $e->getMessage();
+} else {
+    echo "<h1>Error: Authorization code not received</h1>";
 }
