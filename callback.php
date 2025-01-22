@@ -9,10 +9,27 @@ $provider = new GenericProvider([
     'redirectUri'             => 'https://<your-koyeb-app-url>/callback.php', // Replace with your Koyeb app URL
     'urlAuthorize'            => 'https://www.tiktok.com/v2/auth/authorize/',
     'urlAccessToken'          => 'https://www.tiktok.com/v2/auth/token/',
-    'urlResourceOwnerDetails' => 'https://www.tiktok.com/v2/resource/owner/',
 ]);
 
-// Redirect to TikTok's OAuth login page
-$authUrl = $provider->getAuthorizationUrl();
-header('Location: ' . $authUrl);
-exit;
+if (!isset($_GET['code'])) {
+    die('Authorization code not found.');
+}
+
+try {
+    // Get the access token
+    $accessToken = $provider->getAccessToken('authorization_code', [
+        'code' => $_GET['code'],
+    ]);
+
+    // Get the user's details
+    $resourceOwner = $provider->getResourceOwner($accessToken);
+    $userDetails = $resourceOwner->toArray();
+
+    // Display user details
+    echo "<h1>Welcome, " . $userDetails['display_name'] . "!</h1>";
+    echo "<pre>";
+    print_r($userDetails);
+    echo "</pre>";
+} catch (\Exception $e) {
+    echo "Error: " . $e->getMessage();
+}
