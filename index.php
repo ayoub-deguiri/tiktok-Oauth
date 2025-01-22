@@ -79,6 +79,9 @@ $authorizationUrl = $provider->getAuthorizationUrl([
 // Save the state for CSRF protection
 $_SESSION['oauth2state'] = $provider->getState();
 
+// Debug: Print authorization URL
+echo 'Authorization URL: ' . $authorizationUrl . '<br>';
+
 // Redirect the user to TikTok
 header('Location: ' . $authorizationUrl);
 exit;

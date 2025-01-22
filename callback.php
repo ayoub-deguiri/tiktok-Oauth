@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 
 session_start();
 
+// TikTok OAuth Credentials (Replace with your own)
 $clientKey = 'sbawfkhufpqjwwl44p'; // Replace with your TikTok Client Key
 $clientSecret = 'tfg9nooMwjOW2wBAi1kkXU3L3Of4jdGS'; // Replace with your TikTok Client Secret
 $redirectUri = 'https://encouraging-crissie-dakiri-28cc87b6.koyeb.app/callback.php'; // Replace with your callback URL
@@ -85,14 +86,20 @@ try {
         'code' => $code,
     ]);
 
+    // Debug: Print access token
+    echo '<pre>';
+    print_r($accessToken);
+    echo '</pre>';
+
     // Use the access token to fetch user info
     $resourceOwner = $provider->getResourceOwner($accessToken);
     $userInfo = $resourceOwner->toArray();
 
-    // Output user info
+    // Debug: Print user info
     echo '<pre>';
     print_r($userInfo);
     echo '</pre>';
 } catch (\Exception $e) {
-    exit('Error: ' . $e->getMessage());
+    // Debug: Print error message
+    echo 'Error: ' . $e->getMessage();
 }
