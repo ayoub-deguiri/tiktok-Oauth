@@ -2,7 +2,7 @@
     "name": "ayoub/tiktok",
     "autoload": {
         "psr-4": {
-            "Ayoub\\Tiktok\\": "src/"
+            "App\\": "src/"
         }
     },
     "authors": [
