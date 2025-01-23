@@ -8,7 +8,7 @@ require __DIR__ . '/vendor/autoload.php';
 use App\OAuth2\TikTokProvider;
 
 // TikTok OAuth configuration
-$clientKey = 'sbaww4cmy7s57rnq3j'; // Replace with your TikTok client key
+$clientKey = 'sbaww4cmy7s57rnq3j'; // Replace with your TikTok client keycc
 $clientSecret = 'W0ag11JJVIEglBoMKgplUyApTt7J1wHH'; // Replace with your TikTok client secret
 $redirectUri = 'https://encouraging-crissie-dakiri-28cc87b6.koyeb.app/callback.php'; // Replace with your redirect URI
 
