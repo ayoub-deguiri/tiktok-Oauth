@@ -8,6 +8,8 @@ require __DIR__ . '/vendor/autoload.php';
 require 'src/OAuth2/TikTokProvider.php'; // Adjust the path as needed
 
 
+require '/workspace/src/OAuth2/TikTokProvider.php';
+
 
 
 // TikTok OAuth configuration
