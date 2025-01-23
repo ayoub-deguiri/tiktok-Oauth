@@ -5,7 +5,10 @@ error_reporting(E_ALL);
 require 'vendor/autoload.php';
 require __DIR__ . '/vendor/autoload.php';
 
-use App\OAuth2\TikTokProvider;
+require 'src/OAuth2/TikTokProvider.php'; // Adjust the path as needed
+
+
+
 
 // TikTok OAuth configuration
 $clientKey = 'sbaww4cmy7s57rnq3j'; // Replace with your TikTok client keycc
